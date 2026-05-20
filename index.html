@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="th">
 <head>
   <meta charset="utf-8" />
-  <title>PEA GeoJSON Map</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <title>33kV GeoJSON Map</title>
 
   <link
     rel="stylesheet"
@@ -10,19 +12,46 @@
   />
 
   <style>
+
     html, body {
       margin: 0;
+      padding: 0;
       height: 100%;
+      width: 100%;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
     }
 
     #map {
       width: 100%;
       height: 100vh;
     }
+
+    .leaflet-popup-content {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .map-title{
+      position:absolute;
+      top:10px;
+      left:60px;
+      z-index:999;
+      background:white;
+      padding:10px 14px;
+      border-radius:10px;
+      box-shadow:0 2px 10px rgba(0,0,0,.2);
+      font-weight:bold;
+    }
+
   </style>
 </head>
 
 <body>
+
+<div class="map-title">
+  ⚡ ระบบแสดงผล GeoJSON 33kV
+</div>
 
 <div id="map"></div>
 
@@ -30,40 +59,101 @@
 
 <script>
 
-const map = L.map('map').setView([8.6, 99.2], 10);
+  // =========================
+  // CREATE MAP
+  // =========================
 
-L.tileLayer(
-  'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-  {
-    attribution: '© OpenStreetMap'
-  }
-).addTo(map);
+  const map = L.map('map').setView([8.6, 99.2], 9);
 
-fetch('PSGgeojson.geojson')
-  .then(res => res.json())
-  .then(data => {
+  // =========================
+  // BASEMAP
+  // =========================
 
-    const geoLayer = L.geoJSON(data, {
+  const osm = L.tileLayer(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {
+      attribution: '&copy; OpenStreetMap'
+    }
+  ).addTo(map);
 
-      onEachFeature: function(feature, layer) {
+  // =========================
+  // LOAD GEOJSON
+  // =========================
 
-        if(feature.properties){
+  fetch('PSGgeojson.geojson')
 
-          let popup = '';
+    .then(response => {
 
-          for(let key in feature.properties){
-            popup += `<b>${key}</b>: ${feature.properties[key]}<br>`;
-          }
-
-          layer.bindPopup(popup);
-        }
+      if (!response.ok) {
+        throw new Error('ไม่พบไฟล์ GeoJSON');
       }
 
-    }).addTo(map);
+      return response.json();
+    })
 
-    map.fitBounds(geoLayer.getBounds());
+    .then(data => {
 
-  });
+      console.log('GeoJSON Loaded:', data);
+
+      const geojsonLayer = L.geoJSON(data, {
+
+        style: function(feature) {
+
+          return {
+            color: '#7b1fa2',
+            weight: 3,
+            opacity: 1
+          };
+        },
+
+        pointToLayer: function(feature, latlng){
+
+          return L.circleMarker(latlng, {
+            radius: 6,
+            fillColor: '#ff9800',
+            color: '#fff',
+            weight: 1,
+            opacity: 1,
+            fillOpacity: 0.9
+          });
+
+        },
+
+        onEachFeature: function(feature, layer) {
+
+          if(feature.properties){
+
+            let html = '';
+
+            for (const key in feature.properties) {
+
+              html += `
+                <b>${key}</b> :
+                ${feature.properties[key]}
+                <br>
+              `;
+            }
+
+            layer.bindPopup(html);
+          }
+
+        }
+
+      }).addTo(map);
+
+      // ZOOM TO LAYER
+
+      map.fitBounds(geojsonLayer.getBounds());
+
+    })
+
+    .catch(error => {
+
+      console.error(error);
+
+      alert('โหลด GeoJSON ไม่สำเร็จ : ' + error.message);
+
+    });
 
 </script>
 
