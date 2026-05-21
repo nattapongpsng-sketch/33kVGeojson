@@ -38,7 +38,7 @@
 
     .panel {
       position: absolute;
-      top: 72px;
+      top: 116px;
       right: 14px;
       width: 340px;
       max-height: calc(100vh - 100px);
@@ -252,7 +252,7 @@
     '🗺️ แผนที่ถนน': streetMap,
     '🛰️ ดาวเทียม': satelliteMap,
     '🌙 Dark Map': darkMap
-  }, {}, { collapsed: false }).addTo(map);
+  }, {}, { collapsed: true }).addTo(map);
 
   function escapeHtml(s){
     return String(s ?? '')
